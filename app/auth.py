@@ -11,12 +11,12 @@ from jwt.exceptions import InvalidTokenError
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, Depends, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordBearer
 
 import os
 
-from app import database, schemas
-from app.crud import get_user_by_username
+from app import database
+from app.crud import get_dev_by_username
 from app.schemas import TokenData
 
 # Password hashing context
@@ -48,16 +48,15 @@ def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
 
-def authenticate_user(db: Session, username: str, password: str):
-
+def authenticate_dev(db: Session, username: str, password: str):
     # Using func from crud.py
-    user = get_user_by_username(db, username)
+    user = get_dev_by_username(db, username)
     if not user or not verify_password(password, user.hashed_password):
         return False
     return user
 
 # Getting current user using access token
-async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: Session = Depends(database.get_db)):
+async def get_current_dev(token: Annotated[str, Depends(oauth2_scheme)], db: Session = Depends(database.get_db)):
     # Creating exception for future uses
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -76,7 +75,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: Se
         raise credentials_exception
     
     # Using func from crud.py
-    user = get_user_by_username(db, username)
+    user = get_dev_by_username(db, username)
     if user is None:
         raise credentials_exception
     return user

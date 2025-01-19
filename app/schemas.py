@@ -1,7 +1,10 @@
 # schemas.py is used to describe schemas that will be used to validate input and output data when interacting with an API
 # It helps transform data between query representations and database models, and is also used to validate data coming from the client
 
+from datetime import date
 from pydantic import BaseModel
+
+# ----- USER (PARENT) -----
 
 class UserCreate(BaseModel):
     username: str
@@ -21,6 +24,39 @@ class User(BaseModel):
 
 class UserInDB(User):
     hashed_password: str
+
+# ----- DEVELOPER (CHILD) -----
+
+class DeveloperCreate(UserCreate):
+    first_name: str
+    second_name: str
+    middle_name: str
+    birth_date: date
+    city: str
+    phone_number: str
+
+class Developer(User):
+    first_name: str
+    second_name: str
+    middle_name: str | None = None
+    birth_date: date | None = None
+    city: str | None = None
+    phone_number: str | None = None
+
+# ----- EMPLOYER (CHILD) -----
+
+class EmployerCreate(UserCreate):
+    company_name: str
+    second_name: str
+    middle_name: str
+    birth_date: date
+    city: str
+    phone_number: str
+
+class Employer(User):
+    company_name: str | None = None
+
+# ----- TOKEN -----
 
 class Token(BaseModel):
     access_token: str

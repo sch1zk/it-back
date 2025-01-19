@@ -6,18 +6,54 @@ from app import models, schemas
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+# ----- DEVELOPER -----
+
 # Getting user by its id from database
-def get_user(db: Session, user_id: int):
-    return db.query(models.User).filter(models.User.id == user_id).first()
+def get_dev(db: Session, user_id: int):
+    return db.query(models.UserDeveloper).filter(models.UserDeveloper.id == user_id).first()
 
 # Getting user by its username from database
-def get_user_by_username(db: Session, username: str):
-    return db.query(models.User).filter(models.User.username == username).first()
+def get_dev_by_username(db: Session, username: str):
+    return db.query(models.UserDeveloper).filter(models.UserDeveloper.username == username).first()
 
 # Creating user in database
-def create_user(db: Session, user: schemas.UserCreate):
+def create_dev(db: Session, user: schemas.DeveloperCreate):
     hashed_password = pwd_context.hash(user.password)
-    db_user = models.User(username=user.username, email=user.email, hashed_password=hashed_password)
+    db_user = models.UserDeveloper(
+        username=user.username,
+        email=user.email,
+        hashed_password=hashed_password,
+        first_name=user.first_name,
+        second_name=user.second_name,
+        middle_name=user.middle_name,
+        birth_date=user.birth_date,
+        city=user.city,
+        phone_number=user.phone_number
+    )
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+# ----- EMPLOYER -----
+
+# Getting user by its id from database
+def get_emp(db: Session, user_id: int):
+    return db.query(models.UserEmployer).filter(models.UserEmployer.id == user_id).first()
+
+# Getting user by its username from database
+def get_emp_by_username(db: Session, username: str):
+    return db.query(models.UserEmployer).filter(models.UserEmployer.username == username).first()
+
+# Creating user in database
+def create_emp(db: Session, user: schemas.EmployerCreate):
+    hashed_password = pwd_context.hash(user.password)
+    db_user = models.UserEmployer(
+        username=user.username,
+        email=user.email,
+        hashed_password=hashed_password,
+        company_name=user.company_name
+    )
     db.add(db_user)
     db.commit()
     db.refresh(db_user)

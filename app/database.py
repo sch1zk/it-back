@@ -1,7 +1,6 @@
 # database.py contains database settings and is used for modifying and managing database sessions, as well as connecting to the database itself
 
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
 import os
