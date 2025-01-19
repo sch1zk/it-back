@@ -10,12 +10,21 @@ class UserCreate(BaseModel):
 
 class User(BaseModel):
     username: str
-    email: str
+    email: str | None = None
+    # sch1zk: Maybe it'll be useful soon
+    # full_name: str | None = None
 
-    class Config:
-        # old orm_mode = True, to return objects not dicts
-        from_attributes = True
+    # sch1zk: Do we really need this for now? Commented because of official docs
+    # class Config:
+    #     # old orm_mode = True, to return objects not dicts
+    #     from_attributes = True
+
+class UserInDB(User):
+    hashed_password: str
 
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+class TokenData(BaseModel):
+    username: str | None = None
