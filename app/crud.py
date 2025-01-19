@@ -1,4 +1,4 @@
-# crud.py is a storage for funcs that perform database operations related to a user
+# crud.py is a storage for funcs that perform database operations
 
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
@@ -58,3 +58,12 @@ def create_emp(db: Session, user: schemas.EmployerCreate):
     db.commit()
     db.refresh(db_user)
     return db_user
+
+# ----- TASK -----
+
+def create_task(db: Session, task: schemas.TaskCreate):
+    db_task = schemas.Task(description=task.description, employer_id=task.employer_id)
+    db.add(db_task)
+    db.commit()
+    db.refresh(db_task)
+    return db_task

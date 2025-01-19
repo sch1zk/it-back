@@ -32,3 +32,11 @@ def login_for_access_token(
         data={"sub": form_data.username}
     )
     return schemas.Token(access_token=access_token, token_type="bearer")
+
+@app.post("/create_task/", response_model=schemas.TaskCreate)
+async def create_task(task: schemas.TaskCreate, db: Session = Depends(database.get_db)):
+    employer = crud.get_emp(db, task.employer_id)
+    if not employer:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Employer not found")
+
+    return crud.create_task(db=db, task=task)
