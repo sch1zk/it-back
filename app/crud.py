@@ -62,7 +62,10 @@ def create_emp(db: Session, user: schemas.EmployerCreate):
 # ----- TASK -----
 
 def create_task(db: Session, task: schemas.TaskCreate):
-    db_task = schemas.Task(description=task.description, employer_id=task.employer_id)
+    db_task = models.Task(
+        description=task.description,
+        employer_id=task.employer_id
+    )
     db.add(db_task)
     db.commit()
     db.refresh(db_task)

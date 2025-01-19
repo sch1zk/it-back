@@ -8,12 +8,6 @@ from sqlalchemy.orm import relationship
 # Base model, from which all other models will be inherited
 Base = declarative_base()
 
-task_dev_association = Table(
-    'task_dev_association', Base.metadata,
-    Column('task_id', Integer, ForeignKey('tasks.id'), primary_key=True),
-    Column('developer_id', Integer, ForeignKey('users_dev.id'), primary_key=True)
-)
-
 class UserDeveloper(Base):
     # Defining how table will be named in the database
     __tablename__ = "users_dev"
@@ -31,8 +25,6 @@ class UserDeveloper(Base):
     birth_date = Column(Date)
     city = Column(String)
     phone_number = Column(String)
-
-    tasks = relationship('Task', secondary=task_dev_association, back_populates='developers')
 
 class UserEmployer(Base):
     # Defining how table will be named in the database
@@ -59,4 +51,3 @@ class Task(Base):
 
     employer_id = Column(Integer, ForeignKey("users_emp.id"), nullable=False)
     employer = relationship("UserEmployer", back_populates="tasks")
-    developers = relationship("UserDeveloper", secondary=task_dev_association, back_populates="tasks")

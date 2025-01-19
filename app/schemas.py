@@ -2,7 +2,6 @@
 # It helps transform data between query representations and database models, and is also used to validate data coming from the client
 
 from datetime import date
-from typing import List
 from pydantic import BaseModel
 
 # ----- USER (PARENT) -----
@@ -66,9 +65,7 @@ class TokenData(BaseModel):
 class TaskCreate(BaseModel):
     description: str
     employer_id: int
-    developer_ids: List[int]
 
 class Task(BaseModel):
     description: str
     employer_id: int
-    developer_ids: List[int]
