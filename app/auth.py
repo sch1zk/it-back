@@ -16,7 +16,7 @@ from fastapi.security import OAuth2PasswordBearer
 import os
 
 from app import database
-from app.crud import get_dev_by_username
+from app.crud import get_dev_by_username, get_emp_by_username
 from app.schemas import TokenData
 
 # Password hashing context
@@ -51,6 +51,13 @@ def get_password_hash(password: str) -> str:
 def authenticate_dev(db: Session, username: str, password: str):
     # Using func from crud.py
     user = get_dev_by_username(db, username)
+    if not user or not verify_password(password, user.hashed_password):
+        return False
+    return user
+
+def authenticate_emp(db: Session, username: str, password: str):
+    # Using func from crud.py
+    user = get_emp_by_username(db, username)
     if not user or not verify_password(password, user.hashed_password):
         return False
     return user

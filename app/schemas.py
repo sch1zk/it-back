@@ -48,11 +48,6 @@ class Developer(User):
 
 class EmployerCreate(UserCreate):
     company_name: str
-    second_name: str
-    middle_name: str
-    birth_date: date
-    city: str
-    phone_number: str
 
 class Employer(User):
     company_name: str | None = None
