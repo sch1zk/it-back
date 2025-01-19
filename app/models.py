@@ -7,16 +7,6 @@ from sqlalchemy.ext.declarative import declarative_base
 # Base model, from which all other models will be inherited
 Base = declarative_base()
 
-class User(Base):
-    # Defining how table will be named in the database
-    __tablename__ = "users"
-
-    # Defining what columns will be used in the database
-    id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, index=True)
-    email = Column(String, unique=True, index=True)
-    hashed_password = Column(String)
-
 class UserDeveloper(Base):
     # Defining how table will be named in the database
     __tablename__ = "users_dev"
