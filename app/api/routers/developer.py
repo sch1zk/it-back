@@ -10,12 +10,12 @@ router = APIRouter()
 @router.post("/register/", response_model=schemas.Token)
 def register(user: schemas.DeveloperCreate, db: Session = Depends(database.get_db)):
     # Checking is username already registered
-    if crud.get_developer_by_username(db, user.username):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Username '{user.username}' already registered")
+    if crud.get_developer(db, "username", user.username):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Username '{user.username}' is already registered")
     
     # Checking is email already registered
-    if crud.get_developer_by_email(db, user.email):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Email '{user.email}' already registered")
+    if crud.get_developer(db, "email", user.email):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Email '{user.email}' is already registered")
 
     # Creating user (developer) and returning access token if succeeded
     if crud.create_developer(db=db, user=user):
@@ -53,9 +53,9 @@ def create_reaction(
     ):
 
     if not crud.get_task(db, task_id):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Task not found!")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Task not found")
     if crud.is_developer_reacted(db, task_id, developer.id):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"User is already reacted to this task!")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Already reacted to this task")
 
     reaction = models.TaskReaction(**reaction_create.model_dump(), task_id=task_id, developer_id=developer.id)
     result = crud.add_reaction(db=db, reaction=reaction)

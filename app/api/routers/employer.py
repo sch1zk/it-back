@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, List
 from fastapi import APIRouter, FastAPI, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordRequestForm
@@ -10,12 +10,12 @@ router = APIRouter()
 @router.post("/register/", response_model=schemas.Token)
 def register(user: schemas.EmployerCreate, db: Session = Depends(database.get_db)):
     # Checking is username already registered
-    if crud.get_employer_by_username(db, user.username):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Username '{user.username}' already registered")
+    if crud.get_employer(db, "username", user.username):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Username '{user.username}' is already registered")
     
     # Checking is email already registered
-    if crud.get_employer_by_email(db, user.email):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Email '{user.email}' already registered")
+    if crud.get_employer(db, "email", user.email):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Email '{user.email}' is already registered")
 
     # Creating user (employer) and returning access token if succeeded
     if crud.create_employer(db=db, user=user):
@@ -57,3 +57,34 @@ def create_task(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="An unexpected error occurred. Please try again later.")
     
     return result
+
+def get_tasks_by_employer(db: Session, employer_id: int) -> List[models.Task]:
+    return db.query(models.Task).filter(models.Task.employer_id == employer_id).all()
+
+@router.get("/tasks/", response_model=List[schemas.Task])
+def get_tasks(
+        skip: int = 0,     # Param for defining how many tasks to skip
+        limit: int = 10,   # Param for defining how many tasks to show
+        all: bool = False, # If True, requests all tasks
+        db: Session = Depends(database.get_db),
+        employer: models.UserEmployer = Depends(auth.get_current_employer)
+    ):
+    tasks = crud.get_tasks_by_employer(db, employer.id, skip, limit, all)
+    if not tasks:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No tasks found")
+    return tasks
+
+@router.get("/tasks/{task_id}", response_model=schemas.Task)
+def get_task(
+        task_id: int,
+        db: Session = Depends(database.get_db),
+        employer: models.UserEmployer = Depends(auth.get_current_employer)
+    ):
+    task = crud.get_task(db, task_id)
+    if not task:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
+    
+    if employer.id != task.employer_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to view this task")
+
+    return task
