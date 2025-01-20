@@ -61,12 +61,16 @@ def create_emp(db: Session, user: schemas.EmployerCreate):
 
 # ----- TASK -----
 
-def create_task(db: Session, task: schemas.TaskCreate):
-    db_task = models.Task(
-        description=task.description,
-        employer_id=task.employer_id
-    )
-    db.add(db_task)
+def add_task(db: Session, task: models.Task):
+    db.add(task)
     db.commit()
-    db.refresh(db_task)
-    return db_task
+    db.refresh(task)
+    return task
+
+# ----- TASK REACTION -----
+
+def add_task_reaction(db: Session, reaction: models.TaskReaction):
+    db.add(reaction)
+    db.commit()
+    db.refresh(reaction)
+    return reaction
