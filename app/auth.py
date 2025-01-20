@@ -86,3 +86,28 @@ async def get_current_dev(token: Annotated[str, Depends(oauth2_scheme)], db: Ses
     if user is None:
         raise credentials_exception
     return user
+
+# Getting current user using access token
+async def get_current_emp(token: Annotated[str, Depends(oauth2_scheme)], db: Session = Depends(database.get_db)):
+    # Creating exception for future uses
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+        
+        # sch1zk: why in official docs they're creating this useless variable?
+        token_data = TokenData(username=username)
+    except InvalidTokenError:
+        raise credentials_exception
+    
+    # Using func from crud.py
+    user = get_emp_by_username(db, username)
+    if user is None:
+        raise credentials_exception
+    return user
