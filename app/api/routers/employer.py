@@ -50,5 +50,10 @@ def create_task(
         db: Session = Depends(database.get_db),
         employer: models.UserEmployer = Depends(auth.get_current_employer)
     ):
-    task = models.Task(**task_create.model_dump(), customer_id=employer.id)
-    return crud.add_task(db=db, task=task)
+    task = models.Task(**task_create.model_dump(), employer_id=employer.id)
+    result = crud.add_task(db=db, task=task)
+    if not result:
+        # Throwing exception if reaction is not created
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="An unexpected error occurred. Please try again later.")
+    
+    return result

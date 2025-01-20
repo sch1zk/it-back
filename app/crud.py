@@ -1,6 +1,7 @@
 # crud.py is a storage for funcs that perform database operations
 
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError
 from passlib.context import CryptContext
 from app import models, schemas
 
@@ -37,8 +38,13 @@ def create_developer(db: Session, user: schemas.DeveloperCreate):
 
         # Return True to "register" in "api.routers.developer" if all is ok
         return True
+    except SQLAlchemyError as e:
+        print(f"Database error occurred: {e}")
+        db.rollback()
+        return False
     except Exception as e:
         print(f"Unexpected error when creating user (developer): {e}")
+        db.rollback()
         return False
 
 # ----- EMPLOYER -----
@@ -72,22 +78,60 @@ def create_employer(db: Session, user: schemas.EmployerCreate):
 
         # Return True to "register" in "api.routers.employer" if all is ok
         return True
+    except SQLAlchemyError as e:
+        print(f"Database error occurred: {e}")
+        db.rollback()
+        return False
     except Exception as e:
         print(f"Unexpected error when creating user (employer): {e}")
+        db.rollback()
         return False
 
 # ----- TASK -----
 
+# Getting task by its id from database
+def get_task(db: Session, task_id: int):
+    return db.query(models.Task).filter(models.Task.id == task_id).first()
+
+# Checking is developer already reacted to task
+def is_developer_reacted(db: Session, task_id: int, developer_id: int) -> bool:
+    reaction_exists = db.query(models.TaskReaction).filter(
+        models.TaskReaction.task_id == task_id,
+        models.TaskReaction.developer_id == developer_id
+    ).first()
+
+    return reaction_exists is not None
+
+# Creating task in database
 def add_task(db: Session, task: models.Task):
-    db.add(task)
-    db.commit()
-    db.refresh(task)
-    return task
+    try:
+        db.add(task)
+        db.commit()
+        db.refresh(task)
+        return task
+    except SQLAlchemyError as e:
+        print(f"Database error occurred: {e}")
+        db.rollback()
+    except Exception as e:
+        print(f"Unexpected error when adding new task to database: {e}")
+        db.rollback()
 
 # ----- TASK REACTION -----
 
+# Getting task reaction by its id from database
+def get_reaction(db: Session, task_id: int):
+    return db.query(models.TaskReaction).filter(models.TaskReaction.id == task_id).first() 
+
+# Creating task reaction in database
 def add_reaction(db: Session, reaction: models.TaskReaction):
-    db.add(reaction)
-    db.commit()
-    db.refresh(reaction)
-    return reaction
+    try:
+        db.add(reaction)
+        db.commit()
+        db.refresh(reaction)
+        return reaction
+    except SQLAlchemyError as e:
+        print(f"Database error occurred: {e}")
+        db.rollback()
+    except Exception as e:
+        print(f"Unexpected error when adding new task to database: {e}")
+        db.rollback()

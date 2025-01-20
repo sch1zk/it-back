@@ -51,5 +51,18 @@ def create_reaction(
         db: Session = Depends(database.get_db),
         developer: models.UserDeveloper = Depends(auth.get_current_developer)
     ):
+
+    if not crud.get_task(db, task_id):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Task not found!")
+    if crud.is_developer_reacted(db, task_id, developer.id):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"User is already reacted to this task!")
+
     reaction = models.TaskReaction(**reaction_create.model_dump(), task_id=task_id, developer_id=developer.id)
-    return crud.add_reaction(db=db, reaction=reaction)
+    result = crud.add_reaction(db=db, reaction=reaction)
+    if not result:
+        # Throwing exception if reaction is not created
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="An unexpected error occurred. Please try again later.")
+    
+    return result
+    
+    
