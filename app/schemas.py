@@ -63,9 +63,22 @@ class TokenData(BaseModel):
 # ----- TASK -----
 
 class TaskCreate(BaseModel):
+    title: str
+    description: str
+
+class Task(BaseModel):
+    title: str
     description: str
     employer_id: int
 
-class Task(BaseModel):
-    description: str
-    employer_id: int
+# ----- TASK REACTION -----
+
+class TaskReactionCreate(BaseModel):
+    title: str
+    message: str
+
+class TaskReaction(BaseModel):
+    title: str
+    message: str
+    task_id: int
+    developer_id: int
