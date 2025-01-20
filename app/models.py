@@ -8,6 +8,12 @@ from sqlalchemy.orm import relationship
 # Base model, from which all other models will be inherited
 Base = declarative_base()
 
+developer_task_association = Table(
+    'developer_task_association', Base.metadata,
+    Column('developer_id', Integer, ForeignKey('users_dev.id'), primary_key=True),
+    Column('task_id', Integer, ForeignKey('tasks.id'), primary_key=True)
+)
+
 class UserDeveloper(Base):
     # Defining how table will be named in the database
     __tablename__ = "users_dev"
@@ -26,6 +32,10 @@ class UserDeveloper(Base):
     city = Column(String)
     phone_number = Column(String)
 
+    # Relationships with other tables
+    assigned_tasks = relationship('Task', secondary=developer_task_association, back_populates='assigned_developers')
+    tasks_reactions = relationship("TaskReaction", back_populates="developer")
+
 class UserEmployer(Base):
     # Defining how table will be named in the database
     __tablename__ = "users_emp"
@@ -39,7 +49,8 @@ class UserEmployer(Base):
     # Employer info
     company_name = Column(String)
 
-    tasks = relationship("Task", back_populates="employer")
+    # Relationships with other tables
+    created_tasks = relationship("Task", back_populates="employer")
 
 class Task(Base):
     # Defining how table will be named in the database
@@ -47,7 +58,28 @@ class Task(Base):
 
     # Defining what columns will be used in the database
     id = Column(Integer, primary_key=True, index=True)
+    title = Column(String)
     description = Column(Text)
 
+    # Relationships with other tables
     employer_id = Column(Integer, ForeignKey("users_emp.id"), nullable=False)
-    employer = relationship("UserEmployer", back_populates="tasks")
+    employer = relationship("UserEmployer", back_populates="created_tasks")
+
+    reactions = relationship('TaskReaction', back_populates='task')
+    assigned_developers = relationship('UserDeveloper', secondary=developer_task_association, back_populates='assigned_tasks')
+
+class TaskReaction(Base):
+    # Defining how table will be named in the database
+    __tablename__ = "tasks_reactions"
+
+    # Defining what columns will be used in the database
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String)
+    message = Column(Text)
+
+    # Relationships with other tables
+    task_id = Column(Integer, ForeignKey("tasks.id"))
+    task = relationship("Task", back_populates="reactions")
+
+    developer_id = Column(Integer, ForeignKey("users_dev.id"))
+    developer = relationship("UserDeveloper", back_populates="tasks_reactions")
