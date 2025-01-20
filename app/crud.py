@@ -9,55 +9,72 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # ----- DEVELOPER -----
 
 # Getting user by its id from database
-def get_dev(db: Session, user_id: int):
+def get_developer(db: Session, user_id: int):
     return db.query(models.UserDeveloper).filter(models.UserDeveloper.id == user_id).first()
 
-# Getting user by its username from database
-def get_dev_by_username(db: Session, username: str):
+# Getting user from database by its username
+def get_developer_by_username(db: Session, username: str):
     return db.query(models.UserDeveloper).filter(models.UserDeveloper.username == username).first()
 
+# Getting user from database by its email
+def get_developer_by_email(db: Session, email: str):
+    return db.query(models.UserDeveloper).filter(models.UserDeveloper.email == email).first()
+
 # Creating user in database
-def create_dev(db: Session, user: schemas.DeveloperCreate):
-    hashed_password = pwd_context.hash(user.password)
-    db_user = models.UserDeveloper(
-        username=user.username,
-        email=user.email,
-        hashed_password=hashed_password,
-        first_name=user.first_name,
-        second_name=user.second_name,
-        middle_name=user.middle_name,
-        birth_date=user.birth_date,
-        city=user.city,
-        phone_number=user.phone_number
-    )
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    return db_user
+def create_developer(db: Session, user: schemas.DeveloperCreate):
+    try:
+        # Converting schema to dict
+        user_data = user.model_dump()
+        user_data["hashed_password"] = pwd_context.hash(user_data.pop("password"))
+
+        # Unpacking dict to created user model
+        db_user = models.UserDeveloper(**user_data)
+
+        # Sending model to database
+        db.add(db_user)
+        db.commit()
+        db.refresh(db_user)
+
+        # Return True to "register" in "api.routers.developer" if all is ok
+        return True
+    except Exception as e:
+        print(f"Unexpected error when creating user (developer): {e}")
+        return False
 
 # ----- EMPLOYER -----
 
-# Getting user by its id from database
-def get_emp(db: Session, user_id: int):
+# Getting user from database by its id
+def get_employer(db: Session, user_id: int):
     return db.query(models.UserEmployer).filter(models.UserEmployer.id == user_id).first()
 
-# Getting user by its username from database
-def get_emp_by_username(db: Session, username: str):
+# Getting user from database by its username
+def get_employer_by_username(db: Session, username: str):
     return db.query(models.UserEmployer).filter(models.UserEmployer.username == username).first()
 
+# Getting user from database by its email
+def get_employer_by_email(db: Session, email: str):
+    return db.query(models.UserEmployer).filter(models.UserEmployer.email == email).first()
+
 # Creating user in database
-def create_emp(db: Session, user: schemas.EmployerCreate):
-    hashed_password = pwd_context.hash(user.password)
-    db_user = models.UserEmployer(
-        username=user.username,
-        email=user.email,
-        hashed_password=hashed_password,
-        company_name=user.company_name
-    )
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    return db_user
+def create_employer(db: Session, user: schemas.EmployerCreate):
+    try:
+        # Converting schema to dict
+        user_data = user.model_dump()
+        user_data["hashed_password"] = pwd_context.hash(user_data.pop("password"))
+
+        # Unpacking dict to created user model
+        db_user = models.UserEmployer(**user_data)
+
+        # Sending model to database
+        db.add(db_user)
+        db.commit()
+        db.refresh(db_user)
+
+        # Return True to "register" in "api.routers.employer" if all is ok
+        return True
+    except Exception as e:
+        print(f"Unexpected error when creating user (employer): {e}")
+        return False
 
 # ----- TASK -----
 
@@ -69,7 +86,7 @@ def add_task(db: Session, task: models.Task):
 
 # ----- TASK REACTION -----
 
-def add_task_reaction(db: Session, reaction: models.TaskReaction):
+def add_reaction(db: Session, reaction: models.TaskReaction):
     db.add(reaction)
     db.commit()
     db.refresh(reaction)

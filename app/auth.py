@@ -16,13 +16,22 @@ from fastapi.security import OAuth2PasswordBearer
 import os
 
 from app import database
-from app.crud import get_dev_by_username, get_emp_by_username
+from app.crud import get_developer_by_username, get_employer_by_username
 from app.schemas import TokenData
 
 # Password hashing context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+# oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+class DeveloperOAuth2PasswordBearer(OAuth2PasswordBearer):
+    pass
+
+class EmployerOAuth2PasswordBearer(OAuth2PasswordBearer):
+    pass
+
+oauth2_scheme_developer = DeveloperOAuth2PasswordBearer(tokenUrl="developer/token")
+oauth2_scheme_employer = EmployerOAuth2PasswordBearer(tokenUrl="employer/token")
 
 # Loading auth related data from .env
 SECRET_KEY = os.getenv("SECRET_KEY")
@@ -48,22 +57,22 @@ def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
 
-def authenticate_dev(db: Session, username: str, password: str):
+def authenticate_developer(db: Session, username: str, password: str):
     # Using func from crud.py
-    user = get_dev_by_username(db, username)
+    user = get_developer_by_username(db, username)
     if not user or not verify_password(password, user.hashed_password):
         return False
     return user
 
-def authenticate_emp(db: Session, username: str, password: str):
+def authenticate_employer(db: Session, username: str, password: str):
     # Using func from crud.py
-    user = get_emp_by_username(db, username)
+    user = get_employer_by_username(db, username)
     if not user or not verify_password(password, user.hashed_password):
         return False
     return user
 
 # Getting current user using access token
-async def get_current_dev(token: Annotated[str, Depends(oauth2_scheme)], db: Session = Depends(database.get_db)):
+async def get_current_developer(token: Annotated[str, Depends(oauth2_scheme_developer)], db: Session = Depends(database.get_db)):
     # Creating exception for future uses
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -82,13 +91,13 @@ async def get_current_dev(token: Annotated[str, Depends(oauth2_scheme)], db: Ses
         raise credentials_exception
     
     # Using func from crud.py
-    user = get_dev_by_username(db, username)
+    user = get_developer_by_username(db, username)
     if user is None:
         raise credentials_exception
     return user
 
 # Getting current user using access token
-async def get_current_emp(token: Annotated[str, Depends(oauth2_scheme)], db: Session = Depends(database.get_db)):
+async def get_current_employer(token: Annotated[str, Depends(oauth2_scheme_employer)], db: Session = Depends(database.get_db)):
     # Creating exception for future uses
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -107,7 +116,7 @@ async def get_current_emp(token: Annotated[str, Depends(oauth2_scheme)], db: Ses
         raise credentials_exception
     
     # Using func from crud.py
-    user = get_emp_by_username(db, username)
+    user = get_employer_by_username(db, username)
     if user is None:
         raise credentials_exception
     return user

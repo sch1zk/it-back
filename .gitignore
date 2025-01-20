@@ -1,4 +1,7 @@
 
-/app/__pycache__
 .env
 /__pycache__
+/app/__pycache__
+/app/api/__pycache__
+/app/api/routers/__pycache__
+.vscode/launch.json
