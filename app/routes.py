@@ -57,10 +57,21 @@ def login_emp_for_access_token(
     )
     return schemas.Token(access_token=access_token, token_type="bearer")
 
-@app.post("/create_task/", response_model=schemas.TaskCreate)
-async def create_task(task: schemas.TaskCreate, db: Session = Depends(database.get_db)):
-    employer = crud.get_emp(db, task.employer_id)
-    if not employer:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Employer not found")
+@app.post("/tasks/", response_model=schemas.TaskCreate)
+def create_task(
+        task_create: schemas.TaskCreate,
+        db: Session = Depends(database.get_db),
+        employer: models.UserEmployer = Depends(auth.get_current_emp)
+    ):
+    task = models.Task(**task_create.model_dump(), customer_id=employer.id)
+    return crud.add_task(db=db, task=task)
 
-    return crud.create_task(db=db, task=task)
+@app.post("/tasks/{task_id}/react/", response_model=schemas.TaskReactionCreate)
+def create_task_reaction(
+        task_id: int,
+        reaction_create: schemas.TaskReactionCreate,
+        db: Session = Depends(database.get_db),
+        developer: models.UserDeveloper = Depends(auth.get_current_dev)
+    ):
+    reaction = models.TaskReaction(**reaction_create.model_dump(), task_id=task_id, developer_id=developer.id)
+    return crud.add_task_reaction(db=db, reaction=reaction)
