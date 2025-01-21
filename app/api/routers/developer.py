@@ -2,6 +2,7 @@ from typing import Annotated
 from fastapi import APIRouter, FastAPI, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordRequestForm
+from pydantic import EmailStr, constr
 
 from app import auth, crud, database, models, schemas
 
@@ -9,6 +10,12 @@ router = APIRouter()
 
 @router.post("/register/", response_model=schemas.Token)
 def register(user: schemas.DeveloperCreate, db: Session = Depends(database.get_db)):
+    # Validate username and email
+    if not isinstance(user.username, str) or not user.username.isalnum():
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid username format")
+    if not isinstance(user.email, str) or not EmailStr.validate(user.email):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid email format")
+    
     # Check if the username is already registered
     if crud.get_developer(db, "username", user.username):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Username '{user.username}' is already registered")
