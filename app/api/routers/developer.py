@@ -1,15 +1,15 @@
 from typing import Annotated
-from fastapi import APIRouter, FastAPI, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-from pydantic import EmailStr, constr
+from pydantic import EmailStr
+from sqlalchemy.orm import Session
 
 from app import auth, crud, database, models, schemas
 
 router = APIRouter()
 
 @router.post("/register/", response_model=schemas.Token)
-def register(user: schemas.DeveloperCreate, db: Session = Depends(database.get_db)):
+def register(user: schemas.DeveloperCreate, db: Session = Depends(database.get_db)) -> schemas.Token:
     # Validate username and email
     if not isinstance(user.username, str) or not user.username.isalnum():
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid username format")
@@ -33,10 +33,9 @@ def register(user: schemas.DeveloperCreate, db: Session = Depends(database.get_d
 
 @router.post("/token", response_model=schemas.Token)
 def login_for_access_token(
-        form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-        db: Session = Depends(database.get_db)
-    ) -> schemas.Token:
-    
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    db: Session = Depends(database.get_db)
+) -> schemas.Token:
     # Authenticate the user
     user = auth.authenticate_developer(db, form_data.username, form_data.password)
     
@@ -52,19 +51,18 @@ def login_for_access_token(
 
 @router.post("/tasks/{task_id}/react/", response_model=schemas.TaskReactionCreate)
 def create_reaction(
-        task_id: int,
-        reaction_create: schemas.TaskReactionCreate,
-        db: Session = Depends(database.get_db),
-        developer: models.UserDeveloper = Depends(auth.get_current_developer)
-    ):
-
+    task_id: int,
+    reaction_create: schemas.TaskReactionCreate,
+    db: Session = Depends(database.get_db),
+    developer: models.UserDeveloper = Depends(auth.get_current_developer)
+) -> schemas.TaskReactionCreate:
     # Check if the task exists
     if not crud.get_task(db, task_id):
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Task not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
     
     # Check if the developer has already reacted
     if crud.is_developer_reacted(db, task_id, developer.id):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Already reacted to this task")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Already reacted to this task")
 
     # Create a TaskReaction instance
     reaction = models.TaskReaction(**reaction_create.model_dump(), task_id=task_id, developer_id=developer.id)
@@ -79,10 +77,10 @@ def create_reaction(
 
 @router.put("/profile/", response_model=schemas.Developer)
 def update_profile(
-        user_update: schemas.DeveloperUpdate,
-        db: Session = Depends(database.get_db),
-        developer: models.UserDeveloper = Depends(auth.get_current_developer)
-    ):
+    user_update: schemas.DeveloperUpdate,
+    db: Session = Depends(database.get_db),
+    developer: models.UserDeveloper = Depends(auth.get_current_developer)
+) -> schemas.Developer:
     # Check if the email is already registered by another user
     if user_update.email and crud.get_developer(db, "email", user_update.email) and user_update.email != developer.email:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Email '{user_update.email}' is already registered")
