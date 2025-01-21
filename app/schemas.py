@@ -39,6 +39,15 @@ class Developer(User):
     city: str | None = None
     phone_number: str | None = None
 
+class DeveloperUpdate(BaseModel):
+    first_name: str | None = None
+    second_name: str | None = None
+    middle_name: str | None = None
+    birth_date: date | None = None
+    city: str | None = None
+    phone_number: str | None = None
+    email: str | None = None
+
 
 # ----- EMPLOYER (CHILD) -----
 

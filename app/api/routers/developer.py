@@ -77,4 +77,22 @@ def create_reaction(
     
     return result
 
+@router.put("/profile/", response_model=schemas.Developer)
+def update_profile(
+        user_update: schemas.DeveloperUpdate,
+        db: Session = Depends(database.get_db),
+        developer: models.UserDeveloper = Depends(auth.get_current_developer)
+    ):
+    # Check if the email is already registered by another user
+    if user_update.email and crud.get_developer(db, "email", user_update.email) and user_update.email != developer.email:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Email '{user_update.email}' is already registered")
+
+    # Update the developer profile
+    updated_developer = crud.update_developer(db=db, developer_id=developer.id, user_update=user_update)
+    
+    if not updated_developer:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="An unexpected error occurred. Please try again later.")
+    
+    return updated_developer
+
 

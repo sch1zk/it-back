@@ -40,6 +40,29 @@ def create_developer(db: Session, user: schemas.DeveloperCreate) -> bool:
         db.rollback()
         return False
 
+def update_developer(db: Session, developer_id: int, user_update: schemas.DeveloperUpdate) -> Optional[models.UserDeveloper]:
+    try:
+        developer = db.query(models.UserDeveloper).filter(models.UserDeveloper.id == developer_id).first()
+        if not developer:
+            logger.warning(f"Developer with id {developer_id} not found")
+            return None
+        
+        update_data = user_update.model_dump(exclude_unset=True)
+        for key, value in update_data.items():
+            setattr(developer, key, value)
+        
+        db.commit()
+        db.refresh(developer)
+        return developer
+    except SQLAlchemyError as e:
+        logger.error(f"Database error occurred while updating developer with id {developer_id}: {e}")
+        db.rollback()
+        return None
+    except Exception as e:
+        logger.error(f"Unexpected error occurred while updating developer with id {developer_id}: {e}")
+        db.rollback()
+        return None
+
 # ----- EMPLOYER -----
 
 def get_employer(db: Session, field: str, value: str) -> Optional[models.UserEmployer]:
