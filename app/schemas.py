@@ -1,7 +1,6 @@
 from datetime import date
 from pydantic import BaseModel
 
-
 # ----- USER (PARENT) -----
 
 class UserCreate(BaseModel):
@@ -19,7 +18,6 @@ class User(BaseModel):
 
 class UserInDB(User):
     hashed_password: str
-
 
 # ----- DEVELOPER (CHILD) -----
 
@@ -48,7 +46,6 @@ class DeveloperUpdate(BaseModel):
     phone_number: str | None = None
     email: str | None = None
 
-
 # ----- EMPLOYER (CHILD) -----
 
 class EmployerCreate(UserCreate):
@@ -56,7 +53,6 @@ class EmployerCreate(UserCreate):
 
 class Employer(User):
     company_name: str | None = None
-
 
 # ----- TOKEN -----
 
@@ -66,7 +62,6 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     username: str | None = None
-
 
 # ----- TASK -----
 
@@ -78,7 +73,6 @@ class Task(BaseModel):
     title: str
     description: str
     employer_id: int
-
 
 # ----- TASK REACTION -----
 
