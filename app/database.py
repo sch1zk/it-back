@@ -9,17 +9,27 @@ load_dotenv()
 # Get database URL from environment variables
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-# Create a database engine
-engine = create_engine(DATABASE_URL)
+# Create a database engine with exception handling
+try:
+    engine = create_engine(DATABASE_URL)
+except Exception as e:
+    raise RuntimeError(f"Error creating engine: {e}")
 
-# Create a session factory
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# Create a session factory with exception handling
+try:
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+except Exception as e:
+    raise RuntimeError(f"Error creating session factory: {e}")
 
-# Function to get a database session
+# Function to get a database session with exception handling
 def get_db():
-    db = SessionLocal()
+    db = None
     try:
+        db = SessionLocal()
         yield db
+    except Exception as e:
+        raise RuntimeError(f"Error during database session: {e}")
     finally:
-        db.close()
+        if db:
+            db.close()
 
