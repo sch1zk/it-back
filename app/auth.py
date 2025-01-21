@@ -24,7 +24,7 @@ class DeveloperOAuth2PasswordBearer(OAuth2PasswordBearer):
     pass # Currently no additional logic, class just inherits from OAuth2PasswordBearer
 
 class EmployerOAuth2PasswordBearer(OAuth2PasswordBearer):
-    pass # Same as above, but for employers (customers)
+    pass # Same as above, but for employers
 
 # Create authorization schemes for developers and employers
 # Each type of user will have its own endpoint for obtaining tokens
