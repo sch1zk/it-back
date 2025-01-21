@@ -1,7 +1,7 @@
 import logging
 from typing import List, Optional
 from sqlalchemy.orm import Session
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from app import auth, models, schemas
 
 logger = logging.getLogger(__name__)
@@ -27,6 +27,10 @@ def create_developer(db: Session, user: schemas.DeveloperCreate) -> bool:
         db.commit()
         db.refresh(db_user)
         return True
+    except IntegrityError as e:
+        logger.error(f"Integrity error occurred while creating user (developer): {e}")
+        db.rollback()
+        return False
     except SQLAlchemyError as e:
         logger.error(f"Database error occurred while creating user (developer): {e}")
         db.rollback()
@@ -57,6 +61,10 @@ def create_employer(db: Session, user: schemas.EmployerCreate) -> bool:
         db.commit()
         db.refresh(db_user)
         return True
+    except IntegrityError as e:
+        logger.error(f"Integrity error occurred while creating user (employer): {e}")
+        db.rollback()
+        return False
     except SQLAlchemyError as e:
         logger.error(f"Database error occurred while creating user (employer): {e}")
         db.rollback()
@@ -100,6 +108,9 @@ def add_task(db: Session, task: models.Task) -> Optional[models.Task]:
         db.commit()
         db.refresh(task)
         return task
+    except IntegrityError as e:
+        logger.error(f"Integrity error occurred while adding task: {e}")
+        db.rollback()
     except SQLAlchemyError as e:
         logger.error(f"Database error occurred while adding task: {e}")
         db.rollback()
@@ -125,6 +136,9 @@ def add_reaction(db: Session, reaction: models.TaskReaction) -> Optional[models.
         db.commit()
         db.refresh(reaction)
         return reaction
+    except IntegrityError as e:
+        logger.error(f"Integrity error occurred while adding reaction: {e}")
+        db.rollback()
     except SQLAlchemyError as e:
         logger.error(f"Database error occurred while adding reaction: {e}")
         db.rollback()
