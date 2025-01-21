@@ -9,6 +9,7 @@ from fastapi import HTTPException, Depends, status
 from fastapi.security import OAuth2PasswordBearer
 from app import crud, database
 from app.schemas import TokenData
+from jwt import PyJWTError
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -38,7 +39,13 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + (expires_delta if expires_delta else timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    try:
+        return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    except PyJWTError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Token encoding failed"
+        ) from e
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
@@ -70,7 +77,7 @@ async def get_current_developer(token: Annotated[str, Depends(oauth2_scheme_deve
         if username is None:
             raise credentials_exception
         token_data = TokenData(username=username)
-    except InvalidTokenError:
+    except (InvalidTokenError, PyJWTError):
         raise credentials_exception
     user = crud.get_developer(db, "username", username)
     if user is None:
@@ -89,7 +96,7 @@ async def get_current_employer(token: Annotated[str, Depends(oauth2_scheme_emplo
         if username is None:
             raise credentials_exception
         token_data = TokenData(username=username)
-    except InvalidTokenError:
+    except (InvalidTokenError, PyJWTError):
         raise credentials_exception
     user = crud.get_employer(db, "username", username)
     if user is None:
