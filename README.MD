@@ -1,8 +1,8 @@
-Для установки всех необходимых зависимостей необходимо выполнить команду
+Не забываем устанавливать зависимости перед началом работы!
 
 pip install -r requirements.txt
 
-Fill .env file as
+Создать .env в корне и заполнить:
 
 DATABASE_URL=postgresql://username:password@localhost/database
 SECRET_KEY=your_secret_key
