@@ -9,4 +9,8 @@ export class RunCodeDto {
   @ApiProperty()
   @IsString()
   lang: string;
+
+  @ApiProperty()
+  @IsString()
+  args?: string[]
 }

@@ -6,6 +6,7 @@ import { CaseDto } from './dto/case.dto';
 import * as Docker from 'dockerode';
 import { RunCodeDto } from './dto/run-code.dto';
 import { PassThrough } from 'stream';
+import * as tar from 'tar-stream';
 import { CaseListResponseDto } from './dto/case-list.dto';
 import { PaginationMetaDto } from './dto/pagination-meta.dto';
 
@@ -33,32 +34,32 @@ export class CasesService {
       throw new Error('Case not found');
     }
 
-    return {
-      id: caseItem.id,
-      title: caseItem.title,
-      description: caseItem.description,
-    };
+    return caseItem;
   }
 
   async runCode(caseId: number, runCodeDto: RunCodeDto): Promise<any> {
-    const { code, lang } = runCodeDto;
+    const { code, lang, args = [] } = runCodeDto;
     let imageName: string;
+    let fileName: string;
     let containerCommand: string[];
 
     switch (lang) {
       case 'python':
         imageName = 'python:slim';
-        containerCommand = ['python3', '-c', code];
+        fileName = 'code.py';
+        containerCommand = ['python3', `/tmp/${fileName}`, ...args];
         break;
 
       case 'node':
         imageName = 'node:slim';
-        containerCommand = ['node', '-e', code];
+        fileName = 'code.js';
+        containerCommand = ['node', `/tmp/${fileName}`, ...args];
         break;
 
       case 'java':
         imageName = 'openjdk:slim';
-        containerCommand = ['java', '-jar', code];
+        fileName = 'code.jar';
+        containerCommand = ['java', '-jar', `/tmp/${fileName}`, ...args];
         break;
 
       default:
@@ -76,6 +77,8 @@ export class CasesService {
         Tty: false,
         Cmd: containerCommand,
       });
+
+      await this.putFileIntoContainer(container, fileName, code);
 
       const outputStream = new PassThrough();
       const logs: string[] = [];
@@ -107,5 +110,24 @@ export class CasesService {
     } catch (error) {
       throw new InternalServerErrorException('Error running code: ' + error.message);
     }
+  }
+
+  private async putFileIntoContainer(container: Docker.Container, fileName: string, fileContent: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const pack = tar.pack();
+      pack.entry({ name: fileName }, fileContent, (err) => {
+        if (err) {
+          return reject(err);
+        }
+        pack.finalize();
+      });
+
+      container.putArchive(pack, { path: '/tmp' }, (err) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve();
+      });
+    });
   }
 }

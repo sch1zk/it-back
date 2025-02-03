@@ -10,4 +10,7 @@ export class Case {
 
   @Column()
   description: string;
+
+  @Column({ type: 'json', nullable: true })
+  testcases: any[];
 }
