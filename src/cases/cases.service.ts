@@ -7,8 +7,8 @@ import * as Docker from 'dockerode';
 import { RunCodeDto } from './dto/run-code.dto';
 import { PassThrough } from 'stream';
 import * as tar from 'tar-stream';
-import { CaseListResponseDto } from './dto/case-list.dto';
-import { PaginationMetaDto } from './dto/pagination-meta.dto';
+import { CaseListDto } from './dto/case-list.dto';
+import { PaginationMetaDto } from 'dto/pagination-meta.dto';
 
 @Injectable()
 export class CasesService {
@@ -17,7 +17,7 @@ export class CasesService {
     private caseRepository: Repository<Case>
   ) {}
 
-  async getCases(page: number = 1, limit: number = 10): Promise<CaseListResponseDto> {
+  async getCases(page: number = 1, limit: number = 10): Promise<CaseListDto> {
     const [cases, total] = await this.caseRepository.findAndCount({
       take: limit,
       skip: (page - 1) * limit,

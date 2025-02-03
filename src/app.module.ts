@@ -6,6 +6,7 @@ import { ConfigModule } from '@nestjs/config';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { CasesModule } from './cases/cases.module';
+import { MediaModule } from './media/media.module';
 
 @Module({
   imports: [
@@ -21,7 +22,7 @@ import { CasesModule } from './cases/cases.module';
       synchronize: true, // В продакшене лучше отключить
     }),
     UsersModule, 
-    AuthModule, CasesModule],
+    AuthModule, CasesModule, MediaModule],
   controllers: [AppController],
   providers: [AppService],
 })

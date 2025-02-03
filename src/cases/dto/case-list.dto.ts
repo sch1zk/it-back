@@ -1,7 +1,7 @@
 import { CaseDto } from './case.dto';
-import { PaginationMetaDto } from './pagination-meta.dto';
+import { PaginationMetaDto } from 'dto/pagination-meta.dto';
 
-export class CaseListResponseDto {
+export class CaseListDto {
   cases: CaseDto[];
   meta: PaginationMetaDto;
 }

@@ -3,19 +3,19 @@ import { CasesService } from './cases.service';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CaseDto } from './dto/case.dto';
 import { RunCodeDto } from './dto/run-code.dto';
-import { CaseListResponseDto } from './dto/case-list.dto';
+import { CaseListDto } from './dto/case-list.dto';
 
 @Controller('cases')
 export class CasesController {
   constructor(private readonly casesService: CasesService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Get all cases with pagination' })
+  @ApiOperation({ summary: 'Get cases with pagination' })
   @ApiResponse({ status: 200, description: 'List of cases', type: [CaseDto] })
-  async getAllCases(
+  async getCases(
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 10,
-  ): Promise<CaseListResponseDto> {
+  ): Promise<CaseListDto> {
     return this.casesService.getCases(page, limit);
   }
 
