@@ -6,6 +6,8 @@ import { CaseDto } from './dto/case.dto';
 import * as Docker from 'dockerode';
 import { RunCodeDto } from './dto/run-code.dto';
 import { PassThrough } from 'stream';
+import { CaseListResponseDto } from './dto/case-list.dto';
+import { PaginationMetaDto } from './dto/pagination-meta.dto';
 
 @Injectable()
 export class CasesService {
@@ -14,17 +16,15 @@ export class CasesService {
     private caseRepository: Repository<Case>
   ) {}
 
-  async getAllCases(page: number = 1, limit: number = 10): Promise<CaseDto[]> {
+  async getCases(page: number = 1, limit: number = 10): Promise<CaseListResponseDto> {
     const [cases, total] = await this.caseRepository.findAndCount({
       take: limit,
       skip: (page - 1) * limit,
     });
 
-    return cases.map(caseItem => ({
-      id: caseItem.id,
-      title: caseItem.title,
-      description: caseItem.description,
-    }));
+    const meta: PaginationMetaDto = { total, page, limit };
+
+    return { cases, meta };
   }
 
   async getCaseById(id: number): Promise<CaseDto> {
