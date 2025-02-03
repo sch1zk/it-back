@@ -1,14 +1,18 @@
-Для установки всех необходимых зависимостей необходимо выполнить команду
-
-pip install -r requirements.txt
-
 Fill .env file as
 
-DATABASE_URL=postgresql://username:password@localhost/database
-SECRET_KEY=your_secret_key
-ALGORITHM=your_algorithm
-ACCESS_TOKEN_EXPIRE_MINUTES=time_in_minutes
+```
+DATABASE_HOST=localhost
+DATABASE_PORT=port
+DATABASE_USER=db_user
+DATABASE_PASSWORD=db_password
+DATABASE_NAME=db_name
 
+BASE_URL=http://localhost:8081
+
+SECRET_KEY=your-secret-key
+ALGORITHM=your-algorithm
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+```
 
 
 <p align="center">
