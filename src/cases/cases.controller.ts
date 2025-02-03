@@ -1,7 +1,8 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { CasesService } from './cases.service';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CaseDto } from './dto/case.dto';
+import { RunCodeDto } from './dto/run-code.dto';
 
 @Controller('cases')
 export class CasesController {
@@ -22,5 +23,15 @@ export class CasesController {
   @ApiResponse({ status: 200, description: 'Case details', type: CaseDto })
   async getCaseById(@Param('id') id: number): Promise<CaseDto> {
     return this.casesService.getCaseById(id);
+  }
+
+  @Post(':id/run')
+  @ApiOperation({ summary: 'Run user code in a Docker container' })
+  @ApiResponse({ status: 200, description: 'Code executed successfully' })
+  async runCode(
+    @Param('id') id: number,
+    @Body() runCodeDto: RunCodeDto,
+  ): Promise<any> {
+    return this.casesService.runCode(id, runCodeDto);
   }
 }
