@@ -9,19 +9,21 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @ApiOperation({ summary: 'User register' })
-  @HttpCode(HttpStatus.OK)
   @Post('register')
+  @ApiOperation({ summary: 'User register' })
+  @ApiResponse({ status: 200, description: 'Register user', type: RegisterDto })
+  @HttpCode(HttpStatus.OK)
   @UsePipes(new ValidationPipe({ whitelist: true }))
   register(@Body() body: RegisterDto) {
     return this.authService.register(body);
   }
 
-  @ApiOperation({ summary: 'User login' })
-  @HttpCode(HttpStatus.OK)
   @Post('login')
+  @ApiOperation({ summary: 'User login and get JWT token' })
+  @ApiResponse({ status: 200, description: 'Login user', type: LoginDto })
+  @HttpCode(HttpStatus.OK)
   @UsePipes(new ValidationPipe({ whitelist: true }))
-  login(@Body() body: LoginDto) {
+  login(@Body() body: LoginDto): Promise<{access_token: string}> {
     return this.authService.login(body.email, body.password);
   }
 }
