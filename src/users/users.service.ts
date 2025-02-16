@@ -14,10 +14,9 @@ export class UsersService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  async createUser(registerDto: RegisterDto) {
-
+  async createUser(registerDto: RegisterDto): Promise<boolean> {
     const { username, email, password } = registerDto;
-  
+
     const user = this.userRepository.create({
       username,
       email,
@@ -26,7 +25,6 @@ export class UsersService {
 
     await this.userRepository.save(user);
     return true;
-
   }
 
   async findUserByEmail(email: string): Promise<User | null> {

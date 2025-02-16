@@ -12,26 +12,26 @@ export class AuthController {
 
   constructor(private readonly authService: AuthService) {}
 
-  @ApiOperation({ summary: 'Регистрация нового пользователя' })
-  @ApiResponse({ status: 201, description: 'Пользователь зарегистрирован' })
-  @ApiResponse({ status: 409, description: 'Email уже существует' })
+  @ApiOperation({ summary: 'New user registration' })
+  @ApiResponse({ status: 201, description: 'User registered successfully' })
+  @ApiResponse({ status: 409, description: 'User with this email already exists' })
   @Post('register')
-  register(@Body() body: RegisterDto): Promise<{message: string}> {
-    return this.authService.register(body);
+  register(@Body() registerDto: RegisterDto): Promise<{message: string}> {
+    return this.authService.register(registerDto);
   }
 
-  @ApiOperation({ summary: 'Логин пользователя' })
-  @ApiResponse({ status: 200, description: 'Успешный вход' })
-  @ApiResponse({ status: 401, description: 'Неверные учетные данные' })
+  @ApiOperation({ summary: 'User login' })
+  @ApiResponse({ status: 200, description: 'Succesful login' })
+  @ApiResponse({ status: 401, description: 'Invalid credentials' })
   @Post('login')
-  login(@Body() body: LoginDto): Promise<{access_token: string}> {
-    return this.authService.login(body.email, body.password);
+  login(@Body() loginDto: LoginDto): Promise<{access_token: string}> {
+    return this.authService.login(loginDto);
   }
 
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
-  @Get('profile')
-  getProfile(@Request() req) {
-    return req.user;
-  }
+  // @ApiBearerAuth()
+  // @UseGuards(JwtAuthGuard)
+  // @Get('profile')
+  // getProfile(@Request() req) {
+  //   return req.user;
+  // }
 }
