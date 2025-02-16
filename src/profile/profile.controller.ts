@@ -1,6 +1,6 @@
 import { Controller, Get, UseGuards, Request, Logger } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiCookieAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { ProfileService } from './profile.service';
 
@@ -10,7 +10,6 @@ export class ProfileController {
 
   constructor(private readonly profileService: ProfileService) {}
 
-  @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Get()
   async getProfile(@Request() req) {

@@ -1,8 +1,9 @@
-import { Body, Controller, Logger, Post } from '@nestjs/common';
+import { Body, Controller, Logger, Post, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Response } from 'express';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -23,8 +24,18 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Succesful login' })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   @Post('login')
-  async login(@Body() loginDto: LoginDto): Promise<{access_token: string}> {
-    return await this.authService.login(loginDto);
+  // async login(@Body() loginDto: LoginDto, @Res() res: Response): Promise<{access_token: string}> {
+  async login(@Body() loginDto: LoginDto, @Res() res: Response) {
+    // return await this.authService.login(loginDto);
+    const { access_token } = await this.authService.login(loginDto);
+
+    res.cookie('jwt', access_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 3600000, // 1 час
+    });
+
+    return res.send({ message: 'Logged in' });
   }
 
   // @ApiBearerAuth()
