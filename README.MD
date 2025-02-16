@@ -7,11 +7,8 @@ DATABASE_USER=db_user
 DATABASE_PASSWORD=db_password
 DATABASE_NAME=db_name
 
-BASE_URL=http://localhost:8081
-
-SECRET_KEY=your-secret-key
-ALGORITHM=your-algorithm
-ACCESS_TOKEN_EXPIRE_MINUTES=30
+JWT_SECRET=verystrongjwtsecret
+BCRYPT_SALT_ROUNDS=10
 ```
 
 

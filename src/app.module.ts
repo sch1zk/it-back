@@ -7,10 +7,13 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { CasesModule } from './cases/cases.module';
 import { MediaModule } from './media/media.module';
+import { ProfileModule } from './profile/profile.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot({
+      isGlobal: true, // Делает конфигурацию доступной во всей системе
+    }),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DATABASE_HOST,
@@ -22,7 +25,10 @@ import { MediaModule } from './media/media.module';
       synchronize: true, // В продакшене лучше отключить
     }),
     UsersModule, 
-    AuthModule, CasesModule, MediaModule],
+    AuthModule,
+    CasesModule,
+    MediaModule,
+    ProfileModule],
   controllers: [AppController],
   providers: [AppService],
 })

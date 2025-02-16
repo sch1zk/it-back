@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { RegisterDto } from './dto/register.dto';
 import { User } from '../users/entities/user.entity';
 import * as bcrypt from 'bcrypt';
@@ -15,41 +15,35 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto) {
+    const existingUser = await this.usersService.findUserByEmail(registerDto.email);
+    if (existingUser) {
+      throw new ConflictException('User with this email already exists');
+    }
 
     const hashedPassword = await bcrypt.hash(registerDto.password, 10);
+    registerDto.password = hashedPassword;
 
-    const createUserDto: CreateUserDto = {
-      username: registerDto.username,
-      email: registerDto.email,
-      password: hashedPassword,
-    };
-
-    if (!this.usersService.createUser(createUserDto)) {
-      return { message: 'User with this username or email already exists' };
-    }
+    await this.usersService.createUser(registerDto);
 
     return { message: 'User registered successfully' };
   }
 
-  async validateUser(email: string, password: string): Promise<User | null> {
+  async validateUser(email: string, password: string) {
     const user = await this.usersService.findUserByEmail(email);
-    if (!user) return null;
-
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    return isPasswordValid ? user : null;
+    if (user && (await bcrypt.compare(password, user.password))) {
+      const { password, ...result } = user;
+      return result;
+    }
+    throw new UnauthorizedException('Invalid credentials');
   }
 
-  async login(
-    email: string, 
-    password: string
-  ): Promise<{ access_token: string }> {
-    const user = await this.usersService.findUserByEmail(email);
-
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-      throw new UnauthorizedException();
+  async login(email: string, password: string): Promise<{ access_token: string }> {
+    const user = await this.validateUser(email, password);
+    if (!user) {
+      throw new UnauthorizedException('Invalid email or password');
     }
 
-    const payload = { sub: user.id, username: user.username };
+    const payload = { username: user.username, sub: user.id };
     return {
       access_token: await this.jwtService.signAsync(payload),
     };
