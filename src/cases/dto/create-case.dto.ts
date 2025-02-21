@@ -1,9 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 
-export class CaseDto {
-  @ApiProperty()
-  id: number;
-
+export class CreateCaseDto {
   @ApiProperty()
   title: string;
 
@@ -17,5 +14,6 @@ export class CaseDto {
   initial_code: string;
 
   @ApiProperty()
-  testcases: { params: Record<string, any>; expected: any; }[];
+  testcases: { params: Record<string, any>; expected: any }[];
 }
+  

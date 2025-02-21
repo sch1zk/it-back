@@ -1,14 +1,20 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Case } from './entities/case.entity';
 import { Repository } from 'typeorm';
 import { CaseDto } from './dto/case.dto';
-import * as Docker from 'dockerode';
-import { RunCodeDto } from './dto/run-code.dto';
-import { PassThrough } from 'stream';
-import * as tar from 'tar-stream';
 import { CaseListDto } from './dto/case-list.dto';
 import { PaginationMetaDto } from 'dto/pagination-meta.dto';
+import { CreateCaseDto } from './dto/create-case.dto';
+import { UpdateCaseDto } from './dto/update-case-dto';
+import { RunCodeDto } from './dto/run-code.dto';
+
+interface TestResult {
+  params: Record<string, any>;
+  expected: any;
+  output: any;
+  passed: boolean;
+}
 
 @Injectable()
 export class CasesService {
@@ -21,6 +27,7 @@ export class CasesService {
     const [cases, total] = await this.caseRepository.findAndCount({
       take: limit,
       skip: (page - 1) * limit,
+      order: { created_at: 'DESC' },
     });
 
     const meta: PaginationMetaDto = { total, page, limit };
@@ -28,106 +35,74 @@ export class CasesService {
     return { cases, meta };
   }
 
-  async getCaseById(id: number): Promise<CaseDto> {
+  async getCaseById(id: number, hiddenMode: boolean = false): Promise<CaseDto> {
     const caseItem = await this.caseRepository.findOne({ where: { id } });
     if (!caseItem) {
-      throw new Error('Case not found');
+      throw new NotFoundException('Case not found');
+    }
+
+    if (hiddenMode) {
+      const limitedTestcases = caseItem.testcases.slice(0, 3);
+
+      limitedTestcases.forEach(testcase => {
+        delete testcase.expected;
+      });
+
+      return { ...caseItem, testcases: limitedTestcases };
     }
 
     return caseItem;
   }
 
-  async runCode(caseId: number, runCodeDto: RunCodeDto): Promise<any> {
-    const { code, lang, args = [] } = runCodeDto;
-    let imageName: string;
-    let fileName: string;
-    let containerCommand: string[];
+  async createCase(createCaseDto: CreateCaseDto): Promise<CaseDto> {
+    const newCase = this.caseRepository.create(createCaseDto);
+    return await this.caseRepository.save(newCase);
+  }
 
-    switch (lang) {
-      case 'python':
-        imageName = 'python:slim';
-        fileName = 'code.py';
-        containerCommand = ['python3', `/tmp/${fileName}`, ...args];
-        break;
+  async updateCase(id: number, updateCaseDto: UpdateCaseDto): Promise<CaseDto> {
+    const caseItem = await this.caseRepository.preload({
+      id,
+      ...updateCaseDto,
+    });
 
-      case 'node':
-        imageName = 'node:slim';
-        fileName = 'code.js';
-        containerCommand = ['node', `/tmp/${fileName}`, ...args];
-        break;
-
-      case 'java':
-        imageName = 'openjdk:slim';
-        fileName = 'code.jar';
-        containerCommand = ['java', '-jar', `/tmp/${fileName}`, ...args];
-        break;
-
-      default:
-        throw new InternalServerErrorException('Unsupported language');
+    if (!caseItem) {
+      throw new NotFoundException('Case not found');
     }
 
-    try {
-      const docker: Docker = new Docker()
+    return await this.caseRepository.save(caseItem);
+  }
 
-      const container = await docker.createContainer({
-        Image: imageName,
-        AttachStdin: false,
-        AttachStdout: true,
-        AttachStderr: true,
-        Tty: false,
-        Cmd: containerCommand,
-      });
-
-      await this.putFileIntoContainer(container, fileName, code);
-
-      const outputStream = new PassThrough();
-      const logs: string[] = [];
-      const stream = await container.attach({
-        stream: true,
-        stdout: true,
-        stderr: true,
-      });
-
-      container.modem.demuxStream(stream, outputStream, outputStream);
-
-      outputStream.on('data', (chunk: Buffer) => {
-        logs.push(chunk.toString());
-      });
-
-      await container.start();
-
-      const waitResult = await container.wait();
-      if (waitResult.StatusCode !== 0) {
-        throw new InternalServerErrorException('Code execution failed');
-      }
-
-      await container.remove();
-
-      return {
-        output: logs.join(''),
-        exitCode: waitResult.StatusCode,
-      };
-    } catch (error) {
-      throw new InternalServerErrorException('Error running code: ' + error.message);
+  async deleteCase(id: number): Promise<void> {
+    const result = await this.caseRepository.delete(id);
+    if (result.affected === 0) {
+      throw new NotFoundException('Case not found');
     }
   }
 
-  private async putFileIntoContainer(container: Docker.Container, fileName: string, fileContent: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const pack = tar.pack();
-      pack.entry({ name: fileName }, fileContent, (err) => {
-        if (err) {
-          return reject(err);
-        }
-        pack.finalize();
-      });
+  async runCode(caseId: number, { code, lang }: RunCodeDto) {
+    try {
+      const caseItem = await this.getCaseById(caseId);
+      const results: TestResult[] = [];
 
-      container.putArchive(pack, { path: '/tmp' }, (err) => {
-        if (err) {
-          return reject(err);
+      for (const { params, expected } of caseItem.testcases) {
+        const res = await fetch('http://localhost:6060/run', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code, lang }),
+        });
+  
+        if (!res.ok) {
+          throw new HttpException('Failed to execute code', HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        resolve();
-      });
-    });
+  
+        const { output } = await res.json();
+        const passed = output.trim() === expected;
+        results.push({ params, expected, output, passed });
+      }
+
+      return { caseId, results };
+    } catch (error) {
+      throw new HttpException('Execution error', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 }

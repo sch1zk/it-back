@@ -23,7 +23,7 @@ export class CasesController {
   @ApiOperation({ summary: 'Get case details by id' })
   @ApiResponse({ status: 200, description: 'Case details', type: CaseDto })
   async getCaseById(@Param('id') id: number): Promise<CaseDto> {
-    return this.casesService.getCaseById(id);
+    return this.casesService.getCaseById(id, true);
   }
 
   @Post(':id/run')
